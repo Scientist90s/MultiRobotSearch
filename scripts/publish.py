@@ -15,6 +15,7 @@ def loadData():
         data = json.load(json_file)
     return data
 
+# extracting setpoints from json file
 def extractSetpoints(data):
     agent = [[]]*nofagents
     merged = []
@@ -39,14 +40,6 @@ def extractSetpoints(data):
     
     ll = df['col'].values.tolist()
     return ll
-    
-    # agent = [[]]*nofagents
-    # for i in range(len(df.iloc[0][0])):
-    #     agent[i] = []
-    #     for j in range(len(df)):
-    #         agent[i].append(df.iloc[j][0][i])
-            
-    # return agent
     
 
 # publish the list to the topic
