@@ -22,6 +22,7 @@ def drone_pose_cb(msg):
 
 if __name__ == "__main__":
     rospy.init_node("offb_uav3_node")
+    
     pose_sub = rospy.Subscriber('/uav3/mavros/local_position/pose', PoseStamped, callback = drone_pose_cb)
     state_sub = rospy.Subscriber("/uav3/mavros/state", State, callback = state_cb)
 
@@ -82,6 +83,7 @@ if __name__ == "__main__":
         local_pos_pub.publish(pose)
 
         rate.sleep()
+        
     while True:
         rospy.spin()
 

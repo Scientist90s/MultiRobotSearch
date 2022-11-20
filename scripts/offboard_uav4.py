@@ -22,6 +22,7 @@ def drone_pose_cb(msg):
 
 if __name__ == "__main__":
     rospy.init_node("offb_uav4_node")
+    
     pose_sub = rospy.Subscriber('/uav4/mavros/local_position/pose', PoseStamped, callback = drone_pose_cb)
     state_sub = rospy.Subscriber("/uav4/mavros/state", State, callback = state_cb)
 
@@ -75,10 +76,13 @@ if __name__ == "__main__":
                     rospy.loginfo("Vehicle armed")
             
                 last_req = rospy.Time.now()
+                
         if brkFlag:
             break
+        
         local_pos_pub.publish(pose)
 
         rate.sleep()
+        
     while True:
         rospy.spin()
