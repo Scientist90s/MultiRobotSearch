@@ -10,15 +10,20 @@ from mavros_msgs.msg import State
 from mavros_msgs.srv import CommandBool, CommandBoolRequest, SetMode, SetModeRequest
 
 current_state = State()
-
+brkFlag = False
 def state_cb(msg):
     global current_state
     current_state = msg
 
+def drone_pose_cb(msg):
+    if msg.pose.position.z < 1.99 and msg.pose.position.z > 1.89:
+        brkFlag = True    
+
 
 if __name__ == "__main__":
     rospy.init_node("offb_uav4_node")
-
+    
+    pose_sub = rospy.Subscriber('/uav4/mavros/local_position/pose', PoseStamped, callback = drone_pose_cb)
     state_sub = rospy.Subscriber("/uav4/mavros/state", State, callback = state_cb)
 
     local_pos_pub = rospy.Publisher("/uav4/mavros/setpoint_position/local", PoseStamped, queue_size=10)
@@ -71,7 +76,13 @@ if __name__ == "__main__":
                     rospy.loginfo("Vehicle armed")
             
                 last_req = rospy.Time.now()
-
+                
+        if brkFlag:
+            break
+        
         local_pos_pub.publish(pose)
 
         rate.sleep()
+        
+    while True:
+        rospy.spin()
