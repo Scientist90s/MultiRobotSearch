@@ -2,138 +2,132 @@ clc;
 close all;
 clear all;
 
-n=5;
-crs = [0,0;0,10;10,10;10,0];
-numIterations = 100;
-showPlot = true;
-saveFlag = true;  % set to true if you wanna save your results else false
-r_sen = 2;   %sensor range
-pydata = [];
+% Defining some general parameters
+agents=5; % Total number of agents
+corners = [0,0;0,10;10,10;10,0]; % Corners of the specified area
+saveFlag = false;  % set to true if you wanna save your results else false
+plotFlag = true;  % set to true if you wanna plot your results else false
+senseRange = 2;   % range of agent's sensor
+pydata = []; % variable to save agent's position data
 
-Px = 0.5*rand([n,1]);
-Py = 0.5*rand([n,1]);
+% Initializing random initial position of agent near origin
+xPose = 0.5*rand([agents,1]);
+yPose = 0.5*rand([agents,1]);
 
-xrange = max(crs(:,1));
-yrange = max(crs(:,2));
-thresh = 0.01; %max distance threshold for each cycle to end
+xrange = max(corners(:,1));
+yrange = max(corners(:,2));
+threshold = 0.01; % distance threshold to achieve
 
-%Dividing the area into discrete cells and expressing range in terms of the
-%map
-X1 = max(max(crs))/1000;
-r_sen = r_sen/X1;
-Z = ones(1000,1000);%Uncertainity Distribution
-val2 = Z;
+%Dividing the area into discrete cells and expressing range in terms of the map
+Undist = ones(1000,1000); % Uncertainity Distribution
+tempUndist = Undist;
+lcSensor = max(max(corners))/1000;
+senseRange = senseRange/lcSensor;
+K = 0.5; % Proportionality constant
 cycle=1;
-Kprop = 0.5; %Proportionality constant
 
-%%%%%%%%%%%%%%%%%%%%%%%% VISUALIZATION %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if showPlot
-    verCellHandle = zeros(n,1);
-    cellColors = ones(n,3);
-    for i = 1:numel(Px) % color according to
-        verCellHandle(i)  = patch(Px(i),Py(i),cellColors(i,:)); % use color i  -- no robot assigned yet
+% Initializing handles for visualization
+if plotFlag
+    verCellHandle = zeros(agents,1);
+    cellColors = ones(agents,3);
+    for i = 1:numel(xPose)
+        verCellHandle(i) = patch(xPose(i),yPose(i),cellColors(i,:)*0.5); % use color i  -- no robot assigned yet
         hold on
     end
-    pathHandle = zeros(n,1);
-    %numHandle = zeros(n,1);
-    for i = 1:numel(Px) % color according to
-        pathHandle(i)  = plot(Px(i),Py(i),'-','color',cellColors(i,:)*.8);
-        %    numHandle(i) = text(Px(i),Py(i),num2str(i));
+    pathHandle = zeros(agents,1);
+    for i = 1:numel(xPose)
+        pathHandle(i) = plot(xPose(i),yPose(i),'-','color',cellColors(i,:)*.7);
     end
-    goalHandle = plot(Px,Py,'+','linewidth',2);
-    currHandle = plot(Px,Py,'o','linewidth',2);
-    titleHandle = title(['o = Robots, + = Goals, Iteration ', num2str(0)]);
+    goalHandle = plot(xPose,yPose,'x','linewidth',2);
+    currHandle = plot(xPose,yPose,'o','linewidth',1.5);
+    titleHandle = title(['o = Robots, x = Goals, Iteration ', num2str(0)]);
 end
 
 figure
-surf (Z);
-set(surf(Z),'LineStyle','none');
-%%%%%%%%%%%%%%%%%%%%%%%% END VISUALIZATION %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+surf(Undist);
+set(surf(Undist),'LineStyle','none');
 
-dist = xrange*ones(n,1);
-%Starting the loop for search
-while max(max(Z))>0.1
+% Starting search
+dist = xrange*ones(agents,1);
+while max(max(Undist))>0.1 % do search until all the points in the specified area is below 0.1
     figure(1)
-    counter = 0;
-    while max(dist)>thresh
+    count = 0;
+    while max(dist)>threshold 
         tic;
-        counter = counter+1;
-        [v,c]=VoronoiBounded(Px,Py, crs);
-        
-        if showPlot
-            set(currHandle,'XData',Px,'YData',Py);%plot current position  
-            pydata(cycle,counter).Px = Px;
-            pydata(cycle,counter).Py = Py;
-            for i = 1:numel(Px) % color according to
-                xD = [get(pathHandle(i),'XData'),Px(i)];
-                yD = [get(pathHandle(i),'YData'),Py(i)];
-                set(pathHandle(i),'XData',xD,'YData',yD);%plot path position
-                %       set(numHandle(i),'Position',[ Px(i),Py(i)]);
+        count = count+1;
+        [v,c] = VoronoiBounded(xPose,yPose,corners);
+
+        if plotFlag
+            set(currHandle, 'XData', xPose, 'YData', yPose); % plotting agent's current position
+            pydata(cycle,count).Px = xPose;
+            pydata(cycle,count).Py = yPose;
+            for i = 1:numel(xPose)
+                xCurrPath = [get(pathHandle(i),'XData'),xPose(i)];
+                yCurrPath = [get(pathHandle(i),'YData'),yPose(i)];
+                set(pathHandle(i),'XData',xCurrPath,'YData',yCurrPath); % plot current path position
             end
         end
-        
-        for i = 1:numel(c) %calculate the centroid of each cell
-            BW = roipoly(Z,100*v(c{i},1),100*v(c{i},2));
-            GI = mat2gray(BW);
-            for m=1:1000
-                for j=1:1000
-                    GI(j,m) = GI(j,m)*val2(j,m);
+
+        for i = 1:numel(c) % calculating centroid of voronoi cells
+            roi = roipoly(Undist,100*v(c{i},1),100*v(c{i},2));
+            grayRoi = mat2gray(roi);
+            for m=1:length(Undist)
+                for j=1:length(Undist)
+                    grayRoi(j,m) = grayRoi(j,m)*tempUndist(j,m);
                 end
             end
-            s = regionprops(BW, GI, {'WeightedCentroid'});
-            cx = s.WeightedCentroid(1,1)/100;
-            cy = s.WeightedCentroid(1,2)/100;
-            cx = min(xrange,max(0, cx));
-            cy = min(yrange,max(0, cy));
-            if ~isnan(cx) && inpolygon(cx,cy,crs(:,1),crs(:,2))
-                Px(i) = Px(i) + Kprop*(cx - Px(i));  %don't update if goal is outside the polygon
-                Py(i) = Py(i) + Kprop*(cy - Py(i));
-                dist(i) = sqrt((cx - Px(i))^2 + (cy - Py(i))^2);
+            Rprops = regionprops(roi, grayRoi, {'WeightedCentroid'});
+            xCentroid = Rprops.WeightedCentroid(1,1)/100;
+            yCentroid = Rprops.WeightedCentroid(1,2)/100;
+            xCentroid = min(xrange,max(0, xCentroid));
+            yCentroid = min(yrange,max(0, yCentroid));
+            if ~isnan(xCentroid) && inpolygon(xCentroid,yCentroid,corners(:,1),corners(:,2))
+                xPose(i) = xPose(i) + K*(xCentroid - xPose(i));
+                yPose(i) = yPose(i) + K*(yCentroid - yPose(i));
+                dist(i) = sqrt((xCentroid - xPose(i))^2 + (yCentroid - yPose(i))^2);
             end
         end
-        
-        if showPlot
+
+        if plotFlag
             for i = 1:numel(c) % update Voronoi cells
                 set(verCellHandle(i), 'XData',v(c{i},1),'YData',v(c{i},2));
             end
-            
-            set(titleHandle,'string',['o = Robots, + = Goals, Cycle', num2str(cycle,'%3d'), ', Iteration', num2str(counter,'%3d')]);
-            set(goalHandle,'XData',Px,'YData',Py);%plot goal position
+
+            set(titleHandle,'string',['o = Robots, x = Goals, Cycle', num2str(cycle,'%3d'), ', Iteration', num2str(count,'%3d')]);
+            set(goalHandle,'XData',xPose,'YData',yPose); % plot goal position
             axis equal
             axis([0,xrange,0,yrange]);
             drawnow
         end
-        time(counter,cycle) = toc;
-        pydata(cycle,counter).time = toc;
+        time(count,cycle) = toc;
+        pydata(cycle,count).time = toc;
     end
-    val = Z;
-    for i = 1:n
-        BW = roipoly(Z,100*v(c{i},1),100*v(c{i},2));
-        GI = mat2gray(BW);
-        s = regionprops(BW, GI, {'Centroid','WeightedCentroid'});
-        for m=1:1000
-            for j=1:1000
-                vx = s.WeightedCentroid(1,1);
-                vy = s.WeightedCentroid(1,2);
-                dist = sqrt(((m+0.5)-vx)^2+((j+0.5)-vy)^2)/100;
-                if dist < r_sen
-                    val(j,m) = min(val(j,m),(1-0.8708+0.074*dist^2));
+    copyUndist = Undist;
+    for i = 1:agents
+        roi = roipoly(Undist,100*v(c{i},1),100*v(c{i},2));
+        grayRoi = mat2gray(roi);
+        Rprops = regionprops(roi, grayRoi, {'Centroid','WeightedCentroid'});
+        for m=1:length(Undist)
+            for j=1:length(Undist)
+                xVal = Rprops.WeightedCentroid(1,1);
+                yVal = Rprops.WeightedCentroid(1,2);
+                dist = sqrt(((m+0.5)-xVal)^2+((j+0.5)-yVal)^2)/100;
+                if dist < senseRange
+                    copyUndist(j,m) = min(copyUndist(j,m),(1-0.8708+0.074*dist^2));
                 end
             end
         end
     end
-    for m=1:1000
-        for j=1:1000
-            Z(j,m) = Z(j,m)*val(j,m);
-            val2(j,m) = 2*Z(j,m)*0.074;
+    for m=1:length(Undist)
+        for j=1:length(Undist)
+            Undist(j,m) = Undist(j,m)*copyUndist(j,m);
+            tempUndist(j,m) = 2*Undist(j,m)*0.074;
         end
     end
-    max_d(cycle)= max(max(Z));
-    average(cycle) = mean2(Z);
     cycle=cycle+1;
     figure(2);
-    surf (Z);
-    set(surf(Z),'LineStyle','none');
+    surf(Undist);
+    set(surf(Undist),'LineStyle','none');
 end
 
 if saveFlag==true
