@@ -8,7 +8,12 @@ corners = [0,0;0,10;10,10;10,0]; % Corners of the specified area
 saveFlag = false;  % set to true if you wanna save your results else false
 plotFlag = true;  % set to true if you wanna plot your results else false
 senseRange = 2;   % range of agent's sensor
+
+% data gathering variable definition
 pydata = []; % variable to save agent's position data
+maxQ = [];
+avgQ = [];
+iter = [];
 
 % Initializing random initial position of agent near origin
 xPose = 0.5*rand([agents,1]);
@@ -52,6 +57,9 @@ dist = xrange*ones(agents,1);
 while max(max(Undist))>0.1 % do search until all the points in the specified area is below 0.1
     figure(1)
     count = 0;
+    maxQ = [maxQ, max(max(Undist))];
+    avgQ = [avgQ, mean(mean(Undist))];
+    iter = [iter, cycle];
     while max(dist)>threshold 
         tic;
         count = count+1;
@@ -136,3 +144,15 @@ if saveFlag==true
     fprintf(fid,"%s",json);
     fclose(fid);
 end
+
+hold off
+figure;
+plot(iter, avgQ)
+xlabel("Iterations");
+ylabel("Average Q");
+title("AverageQ vs Iterations");
+figure;
+plot(iter, maxQ)
+xlabel("Iterations");
+ylabel("Max Q");
+title("MaxQ vs Iterations");
