@@ -3,18 +3,27 @@ close all;
 clear all;
 
 % Defining some general parameters
-agents=5; % Total number of agents
-Q = 10; % assuming square area always
-corners = [0,0;0,Q;Q,Q;Q,0]; % Corners of the specified area
-saveFlag = false;  % set to true if you wanna save your results else false
+agents = 8; % Total number of agents
+Q = 8; % assuming square area always
+saveFlag = true;  % set to true if you wanna save your results else false
 plotFlag = true;  % set to true if you wanna plot your results else false
+savePlotFlag = true; % set to true if you wanna save your plots else false
 senseRange = 2;   % range of agent's sensor
+
+dirpath  = sprintf("../data/Params_%d_%d", agents, Q);
+if not(isfolder(dirpath))
+    mkdir(dirpath);
+end
+fname = sprintf("agentSetpoint_%d_%d.json", agents, Q);
+file = fullfile(dirpath,fname);
 
 % data gathering variable definition
 pydata = []; % variable to save agent's position data
 maxQ = [];
 avgQ = [];
 iter = [];
+
+corners = [0,0;0,Q;Q,Q;Q,0]; % Corners of the specified area
 
 % Initializing random initial position of agent near origin
 xPose = 0.5*rand([agents,1]);
@@ -133,15 +142,17 @@ while max(max(Undist))>0.1 % do search until all the points in the specified are
             tempUndist(j,m) = 2*Undist(j,m)*0.074;
         end
     end
+    saveas(gcf, fullfile(dirpath,sprintf("searching_%d", cycle)), "png");
     cycle=cycle+1;
     figure(2);
     surf(Undist);
     set(surf(Undist),'LineStyle','none');
+    saveas(gcf, fullfile(dirpath,sprintf("searchsurf_%d", cycle-1)), "png");
 end
 
 if saveFlag==true
     json = jsonencode(pydata);
-    fid = fopen("agentSetpoint.json","w");
+    fid = fopen(file,"w");
     fprintf(fid,"%s",json);
     fclose(fid);
 end
@@ -151,17 +162,23 @@ timeCumsum = cumsum(timeSum);
 
 hold off
 figure;
-plot(iter, avgQ)
+avgQvIter = plot(iter, avgQ);
 xlabel("Iterations");
 ylabel("Average Q");
 title("AverageQ vs Iterations");
 figure;
-plot(iter, maxQ)
+maxQvIter = plot(iter, maxQ);
 xlabel("Iterations");
 ylabel("Max Q");
 title("MaxQ vs Iterations");
 figure;
-plot(iter, timeCumsum)
+cumsumTimevIter = plot(iter, timeCumsum);
 xlabel("Iterations");
 ylabel("Cummulative Search Time (seconds)");
 title("Cummulative Search Time vs Iterations");
+
+if savePlotFlag == true
+    saveas(avgQvIter,fullfile(dirpath,"avgQ"),"png");
+    saveas(maxQvIter,fullfile(dirpath,"maxQ"),"png");
+    saveas(cumsumTimevIter,fullfile(dirpath,"Time"),"png");
+end
