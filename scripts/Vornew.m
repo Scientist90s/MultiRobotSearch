@@ -4,7 +4,8 @@ clear all;
 
 % Defining some general parameters
 agents=5; % Total number of agents
-corners = [0,0;0,10;10,10;10,0]; % Corners of the specified area
+Q = 10; % assuming square area always
+corners = [0,0;0,Q;Q,Q;Q,0]; % Corners of the specified area
 saveFlag = false;  % set to true if you wanna save your results else false
 plotFlag = true;  % set to true if you wanna plot your results else false
 senseRange = 2;   % range of agent's sensor
@@ -24,7 +25,7 @@ yrange = max(corners(:,2));
 threshold = 0.01; % distance threshold to achieve
 
 %Dividing the area into discrete cells and expressing range in terms of the map
-Undist = ones(1000,1000); % Uncertainity Distribution
+Undist = ones(Q*100,Q*100); % Uncertainity Distribution
 tempUndist = Undist;
 lcSensor = max(max(corners))/1000;
 senseRange = senseRange/lcSensor;
@@ -41,7 +42,7 @@ if plotFlag
     end
     pathHandle = zeros(agents,1);
     for i = 1:numel(xPose)
-        pathHandle(i) = plot(xPose(i),yPose(i),'-','color',cellColors(i,:)*.7);
+        pathHandle(i) = plot(xPose(i),yPose(i),'-','color',cellColors(i,:)*.9);
     end
     goalHandle = plot(xPose,yPose,'x','linewidth',2);
     currHandle = plot(xPose,yPose,'o','linewidth',1.5);
@@ -107,7 +108,7 @@ while max(max(Undist))>0.1 % do search until all the points in the specified are
             axis([0,xrange,0,yrange]);
             drawnow
         end
-        time(count,cycle) = toc;
+        time(cycle,count) = toc;
         pydata(cycle,count).time = toc;
     end
     copyUndist = Undist;
@@ -145,6 +146,9 @@ if saveFlag==true
     fclose(fid);
 end
 
+timeSum = sum(time,2);
+timeCumsum = cumsum(timeSum);
+
 hold off
 figure;
 plot(iter, avgQ)
@@ -156,3 +160,8 @@ plot(iter, maxQ)
 xlabel("Iterations");
 ylabel("Max Q");
 title("MaxQ vs Iterations");
+figure;
+plot(iter, timeCumsum)
+xlabel("Iterations");
+ylabel("Cummulative Search Time (seconds)");
+title("Cummulative Search Time vs Iterations");
