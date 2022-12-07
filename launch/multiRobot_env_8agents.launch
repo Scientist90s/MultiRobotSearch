@@ -164,12 +164,102 @@
             <arg name="tgt_component" value="1"/>
         </include>
     </group>
+    <!-- UAV5 -->
+    <group ns="uav5">
+        <!-- MAVROS and vehicle configs -->
+        <arg name="ID" value="5"/>
+        <arg name="fcu_url" default="udp://:14545@localhost:14585"/>
+        <!-- PX4 SITL and vehicle spawn -->
+        <include file="$(find px4)/launch/single_vehicle_spawn.launch">
+            <arg name="x" value="2"/>
+            <arg name="y" value="0"/>
+            <arg name="z" value="0"/>
+            <arg name="R" value="0"/>
+            <arg name="P" value="0"/>
+            <arg name="Y" value="0"/>
+            <arg name="vehicle" value="$(arg vehicle)"/>
+            <arg name="mavlink_udp_port" value="14565"/>
+            <arg name="mavlink_tcp_port" value="4565"/>
+            <arg name="ID" value="$(arg ID)"/>
+            <arg name="gst_udp_port" value="$(eval 5600 + arg('ID'))"/>
+            <arg name="video_uri" value="$(eval 5600 + arg('ID'))"/>
+            <arg name="mavlink_cam_udp_port" value="$(eval 14530 + arg('ID'))"/>
+        </include>
+        <!-- MAVROS -->
+        <include file="$(find mavros)/launch/px4.launch">
+            <arg name="fcu_url" value="$(arg fcu_url)"/>
+            <arg name="gcs_url" value=""/>
+            <arg name="tgt_system" value="$(eval 1 + arg('ID'))"/>
+            <arg name="tgt_component" value="1"/>
+        </include>
+    </group>
+    <!-- UAV6 -->
+    <group ns="uav6">
+        <!-- MAVROS and vehicle configs -->
+        <arg name="ID" value="6"/>
+        <arg name="fcu_url" default="udp://:14546@localhost:14586"/>
+        <!-- PX4 SITL and vehicle spawn -->
+        <include file="$(find px4)/launch/single_vehicle_spawn.launch">
+            <arg name="x" value="1"/>
+            <arg name="y" value="2"/>
+            <arg name="z" value="0"/>
+            <arg name="R" value="0"/>
+            <arg name="P" value="0"/>
+            <arg name="Y" value="0"/>
+            <arg name="vehicle" value="$(arg vehicle)"/>
+            <arg name="mavlink_udp_port" value="14566"/>
+            <arg name="mavlink_tcp_port" value="4566"/>
+            <arg name="ID" value="$(arg ID)"/>
+            <arg name="gst_udp_port" value="$(eval 5600 + arg('ID'))"/>
+            <arg name="video_uri" value="$(eval 5600 + arg('ID'))"/>
+            <arg name="mavlink_cam_udp_port" value="$(eval 14530 + arg('ID'))"/>
+        </include>
+        <!-- MAVROS -->
+        <include file="$(find mavros)/launch/px4.launch">
+            <arg name="fcu_url" value="$(arg fcu_url)"/>
+            <arg name="gcs_url" value=""/>
+            <arg name="tgt_system" value="$(eval 1 + arg('ID'))"/>
+            <arg name="tgt_component" value="1"/>
+        </include>
+    </group>
+    <!-- UAV7 -->
+    <group ns="uav7">
+        <!-- MAVROS and vehicle configs -->
+        <arg name="ID" value="7"/>
+        <arg name="fcu_url" default="udp://:14547@localhost:14587"/>
+        <!-- PX4 SITL and vehicle spawn -->
+        <include file="$(find px4)/launch/single_vehicle_spawn.launch">
+            <arg name="x" value="2"/>
+            <arg name="y" value="1"/>
+            <arg name="z" value="0"/>
+            <arg name="R" value="0"/>
+            <arg name="P" value="0"/>
+            <arg name="Y" value="0"/>
+            <arg name="vehicle" value="$(arg vehicle)"/>
+            <arg name="mavlink_udp_port" value="14567"/>
+            <arg name="mavlink_tcp_port" value="4567"/>
+            <arg name="ID" value="$(arg ID)"/>
+            <arg name="gst_udp_port" value="$(eval 5600 + arg('ID'))"/>
+            <arg name="video_uri" value="$(eval 5600 + arg('ID'))"/>
+            <arg name="mavlink_cam_udp_port" value="$(eval 14530 + arg('ID'))"/>
+        </include>
+        <!-- MAVROS -->
+        <include file="$(find mavros)/launch/px4.launch">
+            <arg name="fcu_url" value="$(arg fcu_url)"/>
+            <arg name="gcs_url" value=""/>
+            <arg name="tgt_system" value="$(eval 1 + arg('ID'))"/>
+            <arg name="tgt_component" value="1"/>
+        </include>
+    </group>
     <group ns="controller">
         <node pkg="MultiRobotSearch" type="offboard_uav0.py" name="Offboard_Controller_uav0" required="true" output="screen" />
         <node pkg="MultiRobotSearch" type="offboard_uav1.py" name="Offboard_Controller_uav1" required="true" output="screen" />
         <node pkg="MultiRobotSearch" type="offboard_uav2.py" name="Offboard_Controller_uav2" required="true" output="screen" />
         <node pkg="MultiRobotSearch" type="offboard_uav3.py" name="Offboard_Controller_uav3" required="true" output="screen" />
         <node pkg="MultiRobotSearch" type="offboard_uav4.py" name="Offboard_Controller_uav4" required="true" output="screen" />
+        <node pkg="MultiRobotSearch" type="offboard_uav5.py" name="Offboard_Controller_uav5" required="true" output="screen" />
+        <node pkg="MultiRobotSearch" type="offboard_uav6.py" name="Offboard_Controller_uav6" required="true" output="screen" />
+        <node pkg="MultiRobotSearch" type="offboard_uav7.py" name="Offboard_Controller_uav7" required="true" output="screen" />
     </group>
 </launch>
 <!-- to add more UAVs (up to 10):
