@@ -10,8 +10,8 @@ publishFlag = True
 nofagents = 5
 
 # Convert json data to dictionary 
-def loadData():
-    with open('/home/yash/catkin_ws/src/MultiRobotSearch/scripts/agentSetpoint.json') as json_file:
+def loadData(fname):
+    with open(fname) as json_file:
         data = json.load(json_file)
     return data
 
@@ -69,8 +69,11 @@ def publishList(ll):
         
 # main function
 if __name__ == '__main__':
+    noa = 5
+    Q = 10
     try:
-        dd = loadData()
+        file = "../data/Params_"+noa+"_"+Q+"/agentSetpoint_"+noa+"_"+Q+".json"
+        dd = loadData(file)
         setPoints = extractSetpoints(dd)
         if publishFlag:
             publishList(setPoints)
